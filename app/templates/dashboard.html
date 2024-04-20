@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        .header-container {
+                background-color: #ec6a6a; /* Header background color */
+                color: #fff; /* Header text color */
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .header-container h2 {
+                margin: 0;
+                font-size: 24px;
+            }
+
+        table {
+            background-color: aqua;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #582929;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #ec6a6a;
+        }
+
+        #timer {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body style="background-color: rgb(102, 102, 101);">
+    
+
+    <div style="background-color: aqua; font-weight: bold; font-size: 30px; width: 80%;" id="timer"></div>
+
+    <table id="table1" style="margin: 20px; padding: 10px; width: 80%;">
+        <tbody id="table1Body">
+            <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <table id="table2" style="margin: 20px; padding: 10px; width: 80%;">
+        <tbody id="table2Body">
+            <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        function fetchDataAndRenderTable1() {
+            fetch('/real_time_data')
+                .then(response => response.json())
+                .then(data => {
+                    const transformedData = transformKeys1(data);
+                    renderTable1(transformedData);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function fetchDataAndRenderTable2() {
+            fetch('/logged_agents_data')
+                .then(response => response.json())
+                .then(data => {
+                    if ('error' in data) {
+                        renderError2(data.error);
+                    } else {
+                        const transformedData = transformKeys2(data);
+                        renderTable2(transformedData);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function transformKeys1(data) {
+            const transformedData = {};
+            for (const key in data) {
+                // Replace underscores with spaces and capitalize each word
+                const transformedKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                transformedData[transformedKey] = data[key];
+            }
+            return transformedData;
+        }
+
+        function transformKeys2(data) {
+    const transformedData = [];
+    data.forEach(obj => {
+        const transformedObj = {};
+        transformedObj["Full Name"] = obj["full_name"];
+        transformedObj["User"] = obj["user"];
+        transformedObj["User Group"] = obj["user_group"];
+        transformedObj["Status"] = obj["status"];
+        transformedObj["Calls Today"] = obj["calls_today"];
+        transformedObj["Campaign ID"] = obj["campaign_id"];
+        transformedData.push(transformedObj);
+    });
+    return transformedData;
+}
+
+
+function renderTable1(data) {
+    const tableBody = document.getElementById('table1Body');
+    tableBody.innerHTML = ''; // Clear existing table rows
+    
+    let headerRow = '<tr>';
+    let valueRow = '<tr>';
+
+    // Print 'User Group' first
+    const userGroupValue = data['Usergroups'];
+    headerRow += `<th>${'User Groups'}</th>`;
+    valueRow += `<td>${userGroupValue}</td>`;
+
+    // Iterate over the remaining keys in the data object
+    for (const key in data) {
+        if (key !== 'Usergroups') {
+            const value = data[key];
+            // Create table cells for header and value rows
+            headerRow += `<th>${key}</th>`;
+            valueRow += `<td>${value}</td>`;
+        }
+    }
+
+    headerRow += '</tr>';
+    valueRow += '</tr>';
+
+    // Append the header and value rows to the table body
+    tableBody.insertAdjacentHTML('beforeend', headerRow);
+    tableBody.insertAdjacentHTML('beforeend', valueRow);
+}
+
+
+        function renderTable2(data) {
+        const tableBody = document.getElementById('table2Body');
+        tableBody.innerHTML = ''; // Clear existing table rows
+        
+        // Render headers
+        const headers = Object.keys(data[0]);
+        const headerRow = '<tr>' + headers.map(header => `<th>${header}</th>`).join('') + '</tr>';
+        tableBody.insertAdjacentHTML('beforeend', headerRow);
+        
+        // Render rows
+        data.forEach(item => {
+            const values = Object.values(item);
+            const row = '<tr>' + values.map(value => `<td>${value}</td>`).join('') + '</tr>';
+            tableBody.insertAdjacentHTML('beforeend', row);
+        });
+        }
+
+        
+
+        function renderError2(errorMessage) {
+            const tableBody = document.getElementById('table2Body');
+            tableBody.innerHTML = `<tr><td colspan="7">${errorMessage}</td></tr>`;
+        }
+
+        // Function to update the timer
+        function updateTimer(seconds) {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Next refresh in ${seconds} seconds`;
+        }
+
+        // Start the countdown timer and fetch data initially
+        let countdown = 10;
+        updateTimer(countdown);
+        fetchDataAndRenderTable1(); // Fetch data for table 1 initially
+        fetchDataAndRenderTable2(); // Fetch data for table 2 initially
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+
+            // Update the timer
+            updateTimer(countdown);
+
+            // Check if countdown reached 0
+            if (countdown <= 0) {
+                countdown = 10; // Reset countdown to 10
+                fetchDataAndRenderTable1(); // Fetch data for table 1
+                fetchDataAndRenderTable2(); // Fetch data for table 2
+            }
+        }, countdown * 100); // Move the multiplication inside setInterval
+    </script>
+</body>
+</html>

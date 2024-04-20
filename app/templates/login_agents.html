@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged In Agents</title>
+    <style>
+        table {
+            background-color: aqua;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #582929;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #ec6a6a;
+        }
+
+        #timer {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body style="background-color: rgb(102, 102, 101);">
+    <div style="background-color: aqua; font-weight: bold; font-size: 30px; width: 80%;" id="timer"></div>
+
+    <table id="resultsTable" style="margin: 20px; padding: 10px; width: 80%;">
+        <tbody id="resultsBody">
+            <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        function fetchDataAndRenderTable() {
+            fetch('/logged_agents_data')
+                .then(response => response.json())
+                .then(data => {
+                    if ('error' in data) {
+                        renderError(data.error);
+                    } else {
+                        const transformedData = transformKeys(data);
+                        renderTable(transformedData);
+                    }
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function transformKeys(data) {
+    const transformedData = [];
+    data.forEach(obj => {
+        const transformedObj = {};
+        transformedObj["Full Name"] = obj["full_name"];
+        transformedObj["User"] = obj["user"];
+        transformedObj["User Group"] = obj["user_group"];
+        transformedObj["Status"] = obj["status"];
+        transformedObj["Calls Today"] = obj["calls_today"];
+        transformedObj["Campaign ID"] = obj["campaign_id"];
+        transformedData.push(transformedObj);
+    });
+    return transformedData;
+}
+
+
+        function renderError(errorMessage) {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = `<tr><td colspan="7">${errorMessage}</td></tr>`;
+        }
+
+        function renderTable(data) {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = ''; // Clear existing table rows
+            
+            // Render headers
+            const headers = Object.keys(data[0]);
+            const headerRow = '<tr>' + headers.map(header => `<th>${header}</th>`).join('') + '</tr>';
+            tableBody.insertAdjacentHTML('beforeend', headerRow);
+            
+            // Render rows
+            data.forEach(item => {
+                const values = Object.values(item);
+                const row = '<tr>' + values.map(value => `<td>${value}</td>`).join('') + '</tr>';
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        // Function to update the timer
+        function updateTimer(seconds) {
+            const timerElement = document.getElementById('timer');
+            timerElement.textContent = `Next refresh in ${seconds} seconds`;
+        }
+
+        // Start the countdown timer and fetch data initially
+        let countdown = 10;
+        updateTimer(countdown);
+        fetchDataAndRenderTable(); // Fetch data initially
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+
+            // Update the timer
+            updateTimer(countdown);
+
+            // Check if countdown reached 0
+            if (countdown <= 0) {
+                countdown = 10; // Reset countdown to 10
+                fetchDataAndRenderTable(); // Fetch data and render table
+            }
+        }, 1000); 
+    </script>
+</body>
+</html>

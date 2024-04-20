@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>List Data</title>
+    <style>
+        .header-container {
+        background-color: #ec6a6a; /* Header background color */
+        color: #fff; /* Header text color */
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header-container h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+        table {
+            margin: 20px;
+            background-color: aqua;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #582929;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #ec6a6a;
+        }
+
+        .input-container {
+            margin: 20px;
+        }
+
+        .input-container input[type="text"] {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .input-container input[type="submit"] {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body style="background-color: rgb(102, 102, 101);">
+
+    <h2 class="header-container">Dashboard</h2>
+
+    <div class="input-container">
+        <form id="listIdForm">
+            <input type="text" id="listIDInput" placeholder="Enter List ID" required>
+            <input type="submit" value="Submit">
+
+        </form>
+    </div>
+
+    <table id="resultsTable" style="margin: 20px; padding: 10px; width: 80%;">
+        <tbody id="resultsBody">
+            <!-- Table body will be populated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        function fetchDataAndRenderTable(listID) {
+            fetch(`/list/${listID}`)
+                .then(response => response.json())
+                .then(data => {
+                    renderTable(data);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        
+        function renderTable(data) {
+    const tableBody = document.getElementById('resultsBody');
+    tableBody.innerHTML = ''; // Clear existing table rows  
+
+    const keyOrder = [
+        'list_id',
+        'list_name',
+        'campaign_id',
+        'active',
+        'list_changedate',
+        'list_lastcalldate',
+        // 'expiration_date',
+        'resets_today',
+        'all_leads_count',
+        'new_leads_count'
+    ];
+
+    let headerRow = '<tr>';
+    let valueRow = '<tr>';
+
+    // Iterate over the keys in the keyOrder array
+    keyOrder.forEach(key => {
+        const displayKey = key.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        const value = data[key] || ''; // If data[key] is undefined, set value to empty string
+        // Create table cells for header and value rows
+        headerRow += `<th style="font-size: 20px;">${displayKey}</th>`;
+        valueRow += `<td style="font-size: 20px;">${value}</td>`;
+    });
+
+    headerRow += '</tr>';
+    valueRow += '</tr>';
+
+    // Append the header and value rows to the table body
+    tableBody.insertAdjacentHTML('beforeend', headerRow);
+    tableBody.insertAdjacentHTML('beforeend', valueRow);
+}
+
+        document.getElementById('listIdForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Display placeholder message
+            showPlaceholderMessage("Bringing data, please wait...");
+
+            const listID = document.getElementById('listIDInput').value;
+            
+            document.getElementById('listIDInput').value = "";
+            // Clear existing table
+            clearTable();
+
+            fetchDataAndRenderTable(listID);
+        });
+
+        function showPlaceholderMessage(message) {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; font-size: 20px;">${message}</td></tr>`;
+        }
+
+        function clearTable() {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

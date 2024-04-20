@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Page Title</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        /* Common styles */
+        body {
+            background-color:  rgb(102, 102, 101); /* Background similar to reference */
+            font-family: Arial, sans-serif;
+        }
+        
+        .header-container {
+        background-color: #ec6a6a; /* Header background color */
+        color: #fff; /* Header text color */
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header-container h2 {
+        margin: 0;
+        font-size: 18px;
+    }
+
+        .input-container {
+
+            margin: 30px;
+        }
+
+        .input-container input[type="text"],
+        .input-container input[type="date"],
+        .input-container input[type="submit"] {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .input-container input[type="submit"] {
+            background-color: #4CAF50;
+            color: rgb(10, 10, 10);
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .input-container input[type="submit"]:hover {
+            background-color: #45a049; /* Darker shade on hover */
+        }
+
+        .styled-table {
+            background-color: aqua;
+            border-collapse: collapse;
+            margin-left: 30px;
+            width: 80%;
+        }
+
+        .styled-table th, .styled-table td {
+            border: 1px solid #582929;
+            text-align: left;
+            padding: 8px;
+        }
+
+        .styled-table th {
+            background-color: #ec6a6a;
+        }
+
+        /* Additional styles */
+        #timer {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        /* Styles for disabled inputs */
+        input[disabled] {
+            background-color: #ffa4a4; /* Light gray background */
+            color: #333; /* Darker text color for readability */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 8px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="input-container">
+    <h2 class="header-container">Agent Stats Details</h2>
+    <form id="agentIdForm">
+        <input type="checkbox" id="allAgentsCheckbox" hidden >
+        <input type="text" id="agentIdInput" placeholder="Enter Agent ID" required>
+        <input type="date" id="a" placeholder="Start Date" required>
+        <input type="date" id="b" placeholder="End Date" required>
+        <input type="submit" value="Submit">
+
+        <script>
+            const allAgentsCheckbox = document.getElementById('allAgentsCheckbox');
+            const agentIdInput = document.getElementById('agentIdInput');
+
+            // Add event listener to checkbox
+            allAgentsCheckbox.addEventListener('change', function() {
+                if (allAgentsCheckbox.checked) {
+                    agentIdInput.disabled = true; // Disable input if checkbox is checked
+                    agentIdInput.value  = "00000"
+                } else if (!allAgentsCheckbox.checked) {
+                    agentIdInput.disabled = false; // Enable input if checkbox is unchecked
+                    agentIdInput.value  = ""
+                }
+            });
+        </script>
+
+        <br>
+        <br>
+        <span>
+            <input disabled id="dateStart"></input>
+            <span style="background: #ec6a6a;">TO</span>
+            <input disabled id="dateEnd"></input>
+        </span>
+    </form>
+</div>
+
+<table id="resultsTable" class="styled-table">
+    <thead>
+        <tr id="headerRow"></tr>
+    </thead>
+    <tbody id="resultsBody">
+        <!-- Table body will be populated dynamically -->
+    </tbody>
+</table>
+
+    <script>
+        function fetchDataAndRenderTable(agentId, a, b) {
+            fetch(`/agent_stat_report/${agentId}/${a}/${b}`)
+                .then(response => response.json())
+                .then(data => {
+                    const transformedData = transformKeys(data);
+                    renderTable(transformedData);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        function transformKeys(data) {
+    const displayNames = {
+        user: 'User',
+        full_name: 'Full Name',
+        user_group: 'User Group',
+        calls: 'Calls',
+        login_time: 'Login Time',
+        total_talk_time: 'Total Talk Time',
+        avg_talk_time: 'Average Talk Time',
+        // avg_wait_time: 'Average Wait Time',
+        // pct_of_queue: 'Percentage of Queue',
+        // pause_time: 'Pause Time',
+        sessions: 'Sessions',
+        // avg_session: 'Average Session',
+        pauses: 'Pauses',
+        // avg_pause_time: 'Average Pause Time',
+        // pause_pct: 'Pause Percentage',
+        // pauses_per_session: 'Pauses per Session'
+    };
+
+    const orderedKeys = [
+        'user',
+        'full_name',
+        'user_group',
+        'calls',
+        'login_time',
+        'total_talk_time',
+        'avg_talk_time',
+        'sessions',
+        'pauses'
+    ];
+
+    const transformedData = {};
+    orderedKeys.forEach(key => {
+        if (key in displayNames && data.hasOwnProperty(key)) {
+            transformedData[displayNames[key]] = data[key];
+        }
+    });
+    return transformedData;
+}
+
+        function renderTable(data) {
+            const tableHeader = document.getElementById('headerRow');
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = ''; // Clear existing table rows  
+            
+            // Create header row
+            let headerRowHTML = '';
+            for (const key in data) {
+                headerRowHTML += `<th>${key}</th>`;
+            }
+            tableHeader.innerHTML = headerRowHTML;
+
+            // Create value row
+            let valueRowHTML = '<tr>';
+            for (const key in data) {
+                valueRowHTML += `<td>${data[key]}</td>`;
+            }
+            valueRowHTML += '</tr>';
+            tableBody.insertAdjacentHTML('beforeend', valueRowHTML);
+        }
+
+        document.getElementById('agentIdForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Display placeholder message
+            showPlaceholderMessage("Bringing data, please wait...");
+
+            const agentId = document.getElementById('agentIdInput').value;
+            const a__ = document.getElementById('a').value;
+            const b__ = document.getElementById('b').value;
+
+            document.getElementById('dateStart').value = document.getElementById('a').value;
+            document.getElementById('dateEnd').value = document.getElementById('b').value;
+
+
+            document.getElementById('agentIdInput').value = "";
+            document.getElementById('a').value = "";
+            document.getElementById('b').value = "";
+
+            // Clear existing table
+            clearTable();
+
+            fetchDataAndRenderTable(agentId, a__, b__);
+        });
+
+        function showPlaceholderMessage(message) {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; font-size: 20px;">${message}</td></tr>`;
+        }
+
+        function clearTable() {
+            const tableBody = document.getElementById('resultsBody');
+            tableBody.innerHTML = '';
+        }
+
+        // Fetch data initially with default agentId
+        const defaultAgentId = 'default_agent_id';
+        const a_ = 'default_agent_id';
+        const b_ = 'default_agent_id'; // Change this to your default agent id
+        fetchDataAndRenderTable(defaultAgentId, a, b);
+    </script>
+</body>
+</html>
