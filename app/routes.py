@@ -23,6 +23,7 @@ def logged_in_agents():
 
 @app.route('/agent_stat_report/<agent_id>/<a>/<b>')
 def agent_stat_report(agent_id,a,b):
+    print("called agen Stat")
     return jsonify(fetch_agent_stat_report(agent_id,a,b))
 
 @app.route('/list/<list_id>')

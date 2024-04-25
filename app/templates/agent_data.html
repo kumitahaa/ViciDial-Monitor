@@ -143,35 +143,17 @@
         }
 
         function transformKeys(data) {
-    const displayNames = {
-        user: 'User',
-        full_name: 'Full Name',
-        user_group: 'User Group',
-        calls: 'Calls',
-        login_time: 'Login Time',
-        total_talk_time: 'Total Talk Time',
-        avg_talk_time: 'Average Talk Time',
-        // avg_wait_time: 'Average Wait Time',
-        // pct_of_queue: 'Percentage of Queue',
-        // pause_time: 'Pause Time',
-        sessions: 'Sessions',
-        // avg_session: 'Average Session',
-        pauses: 'Pauses',
-        // avg_pause_time: 'Average Pause Time',
-        // pause_pct: 'Pause Percentage',
-        // pauses_per_session: 'Pauses per Session'
-    };
-
+    
     const orderedKeys = [
-        'user',
-        'full_name',
-        'user_group',
-        'calls',
-        'login_time',
-        'total_talk_time',
-        'avg_talk_time',
-        'sessions',
-        'pauses'
+        'User',
+        'Full Name',
+        'User Group',
+        'Calls',
+        'Login Time',
+        'Total Talk Time',
+        'Average Talk Time',
+        'Sessions',
+        'Pauses'
     ];
 
     const transformedData = {};
@@ -214,8 +196,19 @@
             const a__ = document.getElementById('a').value;
             const b__ = document.getElementById('b').value;
 
-            document.getElementById('dateStart').value = document.getElementById('a').value;
-            document.getElementById('dateEnd').value = document.getElementById('b').value;
+            const startDateValue = document.getElementById('a').value;
+            const endDateValue = document.getElementById('b').value;
+
+            // Format the dates
+            const startDate = new Date(startDateValue);
+            const endDate = new Date(endDateValue);
+            const options = { month: 'long', day: '2-digit', year: 'numeric' };
+            const formattedStartDate = startDate.toLocaleDateString('en-US', options);
+            const formattedEndDate = endDate.toLocaleDateString('en-US', options);
+
+            // Set the formatted dates to the corresponding elements
+            document.getElementById('dateStart').value = formattedStartDate;
+            document.getElementById('dateEnd').value = formattedEndDate;
 
 
             document.getElementById('agentIdInput').value = "";
